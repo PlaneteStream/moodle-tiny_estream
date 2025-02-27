@@ -24,6 +24,8 @@
 
 namespace tiny_estream;
 
+use moodle_url;
+
 class utils {
 
       public static function tinymce_planetestream_getchecksum() {
@@ -54,7 +56,13 @@ class utils {
     public static function tinymce_planetestream_getauthticket($url, $checksum, $delta, $userip, &$params) {
         $return = '';
         try {
-            $url .= '/VLE/Moodle/Auth/?source=1&checksum=' . $checksum . '&delta=' . $delta . '&u=' . $userip;
+            $url = new moodle_url($url . '/VLE/Moodle/Auth/');
+            $urlparams = [
+                'source'   => 1,
+                'checksum' => $checksum,
+                'delta'    => $delta,
+                'u'        => $userip,
+            ];
 
             $curl = new \curl();
             $curl->setopt([
@@ -67,7 +75,7 @@ class utils {
                 'SSL_VERIFYPEER' => false
             ]);
 
-            if (!$response = $curl->get($url)) {
+            if (!$response = $curl->get($url->out(false, $urlparams))) {
                 return '';
             }
 
