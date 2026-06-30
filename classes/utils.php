@@ -161,7 +161,7 @@ $url = $url . $path;
                 'height' => '500',
                 'width' => '750',
                 'src' => $url,
-                'allow' => 'microphone; camera; display-capture;'
+                'allow' => 'camera; microphone; display-capture; local-network-access *'
         ]);
 
         $iframe .= \html_writer::end_tag('iframe');
