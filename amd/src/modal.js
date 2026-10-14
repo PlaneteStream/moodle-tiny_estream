@@ -22,7 +22,6 @@
  */
 
 import Modal from 'core/modal';
-import ModalRegistry from 'core/modal_registry';
 
 const ESModal = class extends Modal {
     static TYPE = 'tiny_estream/modal';
@@ -36,6 +35,5 @@ const ESModal = class extends Modal {
     }
 };
 
-ModalRegistry.register(ESModal.TYPE, ESModal, ESModal.TEMPLATE);
 
 export default ESModal;

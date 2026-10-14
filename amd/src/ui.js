@@ -22,7 +22,7 @@
  */
 
 import Modal from 'tiny_estream/modal';
-import ModalFactory from 'core/modal_factory';
+import ModalEvents from 'core/modal_events';
 import {getIframe} from "./options";
 
 export const handleAction = (editor) => {
@@ -61,10 +61,11 @@ function getQS(query, variable) {
 }
 
 const displayDialogue = async(editor, data = {}) => {
-    const modal = await ModalFactory.create({
-        type: Modal.TYPE,
+    const modal = await Modal.create({
         templateContext: getTemplateContext(editor, data),
-        large: true
+        large: true,
+        // Keep the root until the hidden event has cleaned up the message listener.
+        removeOnClose: false
     });
 
     modal.show();
@@ -72,25 +73,16 @@ const displayDialogue = async(editor, data = {}) => {
     const iframe = document.getElementById("PESiframe");
     const src = iframe.src;
 
-    if (window.addEventListener) {
-        eventMethod = 'addEventListener';
-        messageEvent = 'message';
-    } else if (window.postMessage) {
-        eventMethod = 'attachEvent';
-        messageEvent = 'onmessage';
-    } else {
-        editor.execCommand('mceInsertContent', false, "Sorry, your web browser is not compatible with this feature.");
-    }
-
-    var evX = window[eventMethod];
-    evX(messageEvent, function (e) {
-
-
-
+    const removeMessageListener = () => {
+        window.removeEventListener('message', handleMessage);
+    };
+    const handleMessage = (e) => {
         var data = String(e.data);
 
             if (data.indexOf("ID=") > -1) {
                 if (data.indexOf("&source=moodle") > -1 || data.indexOf("&source=Moodle") > -1) {
+                    // Consume only a selection; unrelated messages must not disable the picker.
+                    removeMessageListener();
                     
                     var pagetype = decodeURIComponent(getQS(src, "pagetype"));
                     var assignmode = decodeURIComponent(getQS(src, "assign"));
@@ -156,6 +148,12 @@ const displayDialogue = async(editor, data = {}) => {
   
         
 
-    }, false);
+    };
+
+    modal.getRoot().one(ModalEvents.hidden, () => {
+        removeMessageListener();
+        modal.destroy();
+    });
+    window.addEventListener('message', handleMessage);
 
 };
